@@ -1,6 +1,8 @@
 import random
 import hashlib
 from math import gcd
+import math
+import matplotlib.pyplot as plt
 
 # -------------------------------
 # Funções auxiliares
@@ -158,3 +160,54 @@ if l == l_prime and K == K_prime:
 else:
     print("\nAssinatura INVÁLIDA! l != l' ou K != K'")
 
+# -------------------------------
+# Plotagem simples dos valores (com log10 para evitar overflow)
+# -------------------------------
+
+labels = [s['ID'] for s in signatarios]
+r_values = [s['r'] for s in signatarios]
+R_values = [s['R'] for s in signatarios]
+D_values = [s['D'] for s in signatarios]
+h_vals = h_values
+
+def safe_log10(val):
+    return math.log10(val) if val > 0 else 0
+
+r_log = [safe_log10(v) for v in r_values]
+R_log = [safe_log10(v) for v in R_values]
+D_log = [safe_log10(v) for v in D_values]
+h_log = [safe_log10(v) for v in h_vals]
+
+# Para l e l_prime e K e K_prime, log10
+l_log = safe_log10(l)
+l_prime_log = safe_log10(l_prime)
+K_log = safe_log10(K)
+K_prime_log = safe_log10(K_prime)
+
+x = range(len(labels))
+width = 0.15
+
+plt.figure(figsize=(12,6))
+
+# Barras dos signatários
+plt.bar([i - 2*width for i in x], r_log, width=width, label='log10(r_i)')
+plt.bar([i - width for i in x], R_log, width=width, label='log10(R_i)')
+plt.bar([i for i in x], D_log, width=width, label='log10(D_i)')
+plt.bar([i + width for i in x], h_log, width=width, label='log10(H(ID_i))')
+
+# Barras dos valores globais l, l', K, K' deslocadas no centro
+plt.bar(len(labels)+0.5, l_log, width=width*2, label='log10(l) = H(K,M)')
+plt.bar(len(labels)+1.0, l_prime_log, width=width*2, label="log10(l') = H(M,K')")
+plt.bar(len(labels)+1.5, K_log, width=width*2, label='log10(K) = produto(R_i)')
+plt.bar(len(labels)+2.0, K_prime_log, width=width*2, label="log10(K') = D^(e*prod_h*l) mod m")
+
+# Configurações dos ticks do eixo x
+xticks_labels = labels + ['l', "l'", 'K', "K'"]
+plt.xticks(list(x) + [len(labels)+0.5, len(labels)+1.0, len(labels)+1.5, len(labels)+2.0], xticks_labels)
+
+plt.ylabel('log10(Valores)')
+plt.title('Comparação dos valores logaritmizados por signatário e valores globais')
+plt.legend()
+plt.grid(axis='y')
+plt.tight_layout()
+plt.show()
