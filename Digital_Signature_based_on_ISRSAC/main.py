@@ -1,95 +1,55 @@
-import hashlib
-import random
-from math import gcd
+import math
+import time
+import matplotlib.pyplot as plt
+from sympy import factorint, nextprime
 
-
-def gerar_primos():
-    # Números pequenos para exemplo didático, troque por primos grandes em produção
-    primos = [
-        101, 103, 107, 109, 113, 127, 131, 137, 139,
-        149, 151, 157, 163, 167, 173, 179, 181, 191, 193
-    ]
-    p = random.choice(primos)
-    q = random.choice(primos)
-    while p == q:
-        q = random.choice(primos)
-    return p, q
-
-
-def calcular_alpha(p, q, r):
-    return ((p - 1) * (q - 1) * (p - 2 * r) * (q - 2 * r)) // (2 * r)
-
+# Funções auxiliares
+def mdc(a, b):
+    while b:
+        a, b = b, a % b
+    return a
 
 def inverso_modular(a, m):
-    # Algoritmo extendido de Euclides para inverso modular
-    m0, x0, x1 = m, 0, 1
-    if m == 1:
-        return 0
-    while a > 1:
-        q = a // m
-        a, m = m, a % m
-        x0, x1 = x1 - q * x0, x0
-    if x1 < 0:
-        x1 += m0
-    return x1
+    return pow(a, -1, m)
 
+def fatorar(n):
+    return list(factorint(n).keys())
 
-def gerar_chaves():
-    p, q = gerar_primos()
+def gerar_chaves_isrsac(p, q, r):
     n = p * q * (p - 1) * (q - 1)
     m = p * q
-    r = random.randint(1, min((p - 1) // 2, (q - 1) // 2))
-    alpha = calcular_alpha(p, q, r)
+    alpha_n = ((p - 1) * (q - 1) * (p - 2*r) * (q - 2*r)) // (2 * r)
+    e = 3
+    while mdc(e, alpha_n) != 1:
+        e += 2
+    d = inverso_modular(e, alpha_n)
+    return (e, m), (d, m), n
 
-    e = random.randrange(2, alpha)
-    while gcd(e, alpha) != 1:
-        e = random.randrange(2, alpha)
+def assinar_isrsac(hash_msg, chave_privada):
+    d, m = chave_privada
+    return pow(hash_msg, d, m)
 
-    d = inverso_modular(e, alpha)
+def verificar_isrsac(hash_msg, assinatura, chave_publica):
+    e, m = chave_publica
+    return pow(assinatura, e, m) == hash_msg
 
-    chave_publica = (e, n)
-    chave_privada = (d, m)
+base = 10**4
+p = nextprime(2 * base)
+q = nextprime(p + 1000)
+r = 5
 
-    return chave_publica, chave_privada
+pub_isrsac, priv_isrsac, n_isrsac = gerar_chaves_isrsac(p, q, r)
+m_isrsac = pub_isrsac[1]
+hash_mensagem_isrsac = 42 % m_isrsac
+assinatura_isrsac = assinar_isrsac(hash_mensagem_isrsac, priv_isrsac)
+valida_isrsac = verificar_isrsac(hash_mensagem_isrsac, assinatura_isrsac, pub_isrsac)
 
+print("Fatorando módulo ISRSAC...")
+inicio_isrsac = time.perf_counter()
+fatores_isrsac = fatorar(n_isrsac)
+tempo_isrsac = time.perf_counter() - inicio_isrsac
 
-def hash_mensagem(mensagem):
-    h = hashlib.sha256()
-    h.update(mensagem.encode('utf-8'))
-    return int(h.hexdigest(), 16)
-
-
-def assinar(mensagem, chave_privada):
-    d, n = chave_privada
-    h = hash_mensagem(mensagem)
-    assinatura = pow(h, d, n)
-    return assinatura
-
-
-def verificar(mensagem, assinatura, chave_publica):
-    e, n = chave_publica
-    h = hash_mensagem(mensagem)
-    verificado = pow(assinatura, e, n)
-    return verificado == h
-
-
-# =====================
-# Demonstração do uso
-# =====================
-
-# Gerar as chaves
-chave_publica, chave_privada = gerar_chaves()
-
-print("Chave Pública (e, n):", chave_publica)
-print("Chave Privada (d, m):", chave_privada)
-
-# Mensagem a ser assinada
-mensagem = "Esta é uma mensagem confidencial."
-
-# Assinar a mensagem
-assinatura = assinar(mensagem, chave_privada)
-print("Assinatura:", assinatura)
-
-# Verificar a assinatura
-valido = verificar(mensagem, assinatura, chave_publica)
-print("A assinatura é válida?", valido)
+print("Módulo n:", n_isrsac)
+print("Assinatura válida:", valida_isrsac)
+print(f"Tempo de ataque: {tempo_isrsac:.6f} segundos")
+print("Fatores:", fatores_isrsac)
