@@ -93,3 +93,4 @@ print("Assinatura:", assinatura)
 # Verificar a assinatura
 valido = verificar(mensagem, assinatura, chave_publica)
 print("A assinatura é válida?", valido)
+
