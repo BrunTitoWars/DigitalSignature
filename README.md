@@ -88,4 +88,7 @@ python Evaluation_of_Brute_force_RSA_vs_ISRSAC/main.py
 ## 👨‍💻 Autor
 
 - **João Vitor Russo A. Werneck**  
-Desenvolvedor e responsável pela implementação, testes e documentação do projeto.
+- **Ricardo André**
+- **Arquimedes França**
+- **Eduarda Azenha**
+- **Alyson Farias**
