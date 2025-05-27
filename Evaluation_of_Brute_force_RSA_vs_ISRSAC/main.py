@@ -144,7 +144,7 @@ cores = ['blue', 'green', 'red']
 
 melhor = rotulos[tempos.index(max(tempos))]
 
-print(f"\n✅ O esquema mais resistente à fatoração foi: {melhor}")
+print("\n O esquema mais resistente à fatoração foi:" + melhor)
 
 plt.figure(figsize=(10, 6))
 plt.bar(rotulos, tempos, color=cores, width=0.5)
